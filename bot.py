@@ -46,17 +46,16 @@ async def handle_photo(message: types.Message):
 
 @dp.message(F.text)
 async def handle_text(message: types.Message):
-    # ЛОГ: Ты увидишь это в черном окне
-    print(f"Сообщение от {message.from_user.id}: {message.text}")
+    print(f"Сообщение от {message.from_user.id}: {message.text}") # ЛОГ
     
-    uid = message.from_user.id
-    if uid not in chat_sessions:
-        chat_sessions[uid] = model.start_chat(history=[])
     try:
-        response = chat_sessions[uid].send_message(message.text)
+        # Прямая генерация ответа без создания сложной сессии чата
+        response = model.generate_content(message.text)
         await message.reply(response.text)
     except Exception as e:
-        await message.answer("Google не отвечает. Попробуй включить VPN на ПК.")
+        # Выводим реальную ошибку в логи Render, чтобы мы ее увидели
+        print(f"ОШИБКА GOOGLE: {e}") 
+        await message.answer("Google не отвечает. Проверь логи в Render.")
 
 async def main():
     print("--- ЗАПУСК... ---")
@@ -65,4 +64,5 @@ async def main():
 if __name__ == "__main__":
 
     asyncio.run(main())
+
 
