@@ -19,7 +19,8 @@ async def handle_text(message: types.Message):
     try:
         with DDGS() as ddgs:
             # Исправленный вызов для версии 8.1.1
-            response = ddgs.chat(message.text, model='gpt-4o-mini')
+            results = ddgs.chat(message.text, model='gpt-4o-mini')
+response = "".join([str(r) for r in results])
             await message.reply(response)
     except Exception as e:
         print(f"ОШИБКА: {e}")
@@ -31,6 +32,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
