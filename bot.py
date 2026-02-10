@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from duckduckgo_search import AsyncDDGS
+from duckduckgo_search import DDGS
 import os
 
 # Берем только токен Телеграм
@@ -19,8 +19,8 @@ async def handle_text(message: types.Message):
     print(f"Запрос от {message.from_user.id}: {message.text}")
     try:
         # Используем бесплатный ИИ через DuckDuckGo
-        async with AsyncDDGS() as ddgs:
-            results = await ddgs.chat(message.text, model='gpt-4o-mini')
+        with DDGS() as ddgs:
+            results = ddgs.chat(message.text, model='gpt-4o-mini')
             await message.reply(results)
     except Exception as e:
         print(f"ОШИБКА: {e}")
@@ -32,5 +32,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
