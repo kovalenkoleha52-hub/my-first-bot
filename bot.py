@@ -10,28 +10,34 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Бот готов! Спрашивай что угодно.")
+    await message.answer("Бот включен! Я использую быстрый поиск ответов. Спрашивай!")
 
 @dp.message(F.text)
 async def handle_text(message: types.Message):
     print(f"Запрос: {message.text}")
     try:
-        # Используем упрощенный синхронный вызов, который стабильнее на Render
         with DDGS() as ddgs:
-            # Модель claude-3-haiku работает быстрее и меньше блокируется
-            response = ddgs.chat(message.text, model='claude-3-haiku')
-            await message.reply(str(response))
+            # Используем поиск мгновенных ответов (Instant Answers)
+            # Это работает быстрее и не блокируется серверами
+            results = ddgs.answers(message.text)
+            if results:
+                answer = results[0]['text']
+            else:
+                # Если мгновенного ответа нет, берем краткое описание из поиска
+                search_gen = ddgs.text(message.text, max_results=1)
+                answer = next(search_gen)['body']
+            
+            await message.reply(answer)
     except Exception as e:
         print(f"ОШИБКА: {e}")
-        await message.answer("ИИ сейчас перегружен. Попробуй через 10 секунд!")
+        await message.answer("Пока не могу найти ответ. Попробуй перефразировать вопрос!")
 
 async def main():
-    print("--- ФИНАЛЬНЫЙ ЗАПУСК ---")
+    print("--- ЗАПУСК СВЕРХСТАБИЛЬНОЙ ВЕРСИИ ---")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
-
 
 
 
