@@ -1,68 +1,36 @@
-import os
-import google.generativeai as genai
+import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from dotenv import load_dotenv
-import asyncio
-# ... остальные импорты ...
+from duckduckgo_search import AsyncDDGS
+import os
 
-load_dotenv() # Загружает данные из переменных окружения
-
-# Вместо самих ключей пишем вот это:
+# Берем только токен Телеграм
 TG_TOKEN = os.getenv("TG_TOKEN")
-GEMINI_KEY = os.getenv("GEMINI_KEY")# Настройка ИИ
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-# Память бота
-chat_sessions = {}
 
 bot = Bot(token=TG_TOKEN)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    chat_sessions[message.from_user.id] = model.start_chat(history=[])
-    await message.answer("Бот готов! Пришли текст или фото.")
-
-@dp.message(Command("draw"))
-async def draw(message: types.Message):
-    prompt = message.text.replace("/draw", "").strip()
-    if not prompt: return await message.answer("Напиши что нарисовать после /draw")
-    url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}"
-    await message.reply_photo(photo=url, caption=f"Рисунок: {prompt}")
-
-@dp.message(F.photo)
-async def handle_photo(message: types.Message):
-    photo = message.photo[-1]
-    file = await bot.get_file(photo.file_id)
-    photo_bytes = await bot.download_file(file.file_path)
-    try:
-        img_data = [{"mime_type": "image/jpeg", "data": photo_bytes.read()}]
-        response = model.generate_content(["Что тут?" ] + img_data)
-        await message.reply(response.text)
-    except Exception as e:
-        await message.answer(f"Ошибка ИИ: {e}")
+    await message.answer("Бот переключен на резервный ИИ! Пиши любой вопрос.")
 
 @dp.message(F.text)
 async def handle_text(message: types.Message):
-    print(f"Сообщение от {message.from_user.id}: {message.text}") # ЛОГ
-    
+    print(f"Запрос от {message.from_user.id}: {message.text}")
     try:
-        # Прямая генерация ответа без создания сложной сессии чата
-        response = model.generate_content(message.text)
-        await message.reply(response.text)
+        # Используем бесплатный ИИ через DuckDuckGo
+        async with AsyncDDGS() as ddgs:
+            results = await ddgs.chat(message.text, model='gpt-4o-mini')
+            await message.reply(results)
     except Exception as e:
-        # Выводим реальную ошибку в логи Render, чтобы мы ее увидели
-        print(f"ОШИБКА GOOGLE: {e}") 
-        await message.answer("Google не отвечает. Проверь логи в Render.")
+        print(f"ОШИБКА: {e}")
+        await message.answer("Даже резервный ИИ приуныл. Попробуй позже.")
 
 async def main():
-    print("--- ЗАПУСК... ---")
+    print("--- ЗАПУСК РЕЗЕРВНОГО БОТА ---")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-
     asyncio.run(main())
 
 
