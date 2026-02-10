@@ -1,6 +1,9 @@
 import os
 import google.generativeai as genai
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
 from dotenv import load_dotenv
+import asyncio
 # ... остальные импорты ...
 
 load_dotenv() # Загружает данные из переменных окружения
@@ -62,3 +65,4 @@ async def main():
 if __name__ == "__main__":
 
     asyncio.run(main())
+
